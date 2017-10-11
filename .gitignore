@@ -1,3 +1,6 @@
+# On-disk music library
+music_lib/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
