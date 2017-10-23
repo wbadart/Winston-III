@@ -22,6 +22,8 @@ setup(name='winston',
       packages=['winston'],
       install_requires=[
           'pygame',
-          'pyyaml',
+          'SpeechRecognition',
+          'pyaudio',
+          # 'pyyaml',
       ],
       zip_safe=False)
