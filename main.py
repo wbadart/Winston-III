@@ -24,25 +24,29 @@ def main():
 
     parser.add_argument(
         '-m', '--module',
-        default='baseline',
-        help='target implementation (default:baseline)')
+        choices=['baseline', 'main'],
+        default='main',
+        help='target implementation (default:main)')
 
     parser.add_argument(
         '-v', '--verbose',
-        default=False,
+        default=True,
         action='store_true',
-        help='enable debugging messages (default:False)')
+        help='enable debugging messages (default:True)')
 
     args = parser.parse_args()
-    log.setLevel(logging.DEBUG if args.verbose else logging.WARNING)
+    loglevel = logging.DEBUG if args.verbose else logging.WARNING
+    log.setLevel(loglevel)
 
     log.debug('Using module "%s"', args.module)
     winston = import_module(f'winston.{args.module}')
 
     try:
-        winston.main()
+        winston.main(loglevel)
     except EOFError:
         print('\nGoodbye!')
+    except KeyboardInterrupt:
+        return
     except Exception:
         post_mortem()
 

@@ -20,23 +20,28 @@ class WinstonRecognizer(object):
 
     def __init__(self):
         self._recognizer = Recognizer()
-        self._source = Microphone
-        self._backend = Backend.google
+        self._source = Microphone(device_index=0)
+        self._backend = _Backend.google
 
+        with self._source as src:
+            self._recognizer.adjust_for_ambient_noise(src)
 
     def listen(self):
+        return self._recognize(self._listen())
+
+    def _listen(self):
         '''Get audio sample.'''
-        with self._source(device_index=0) as src:
+        with self._source as src:
             audio = self._recognizer.listen(src)
         return audio
 
-    def recognize(self, audio):
+    def _recognize(self, audio):
         '''Use specified backend to recognize audio sample.'''
         return getattr(
             self._recognizer, f'recognize_{self._backend}')(audio)
 
 
-class Backend(object):
+class _Backend(object):
     google = 'google'
 
 

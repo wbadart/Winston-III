@@ -48,7 +48,7 @@ class Music(object):
             self.resume()
         elif cmd == _Command.add:
             self.add(' '.join(args))
-        elif cmd == _Command.help:
+        elif cmd == _Command.help_:
             print('COMMANDS: play, stop, pause, resume, add, help')
         else:
             self._log.error('Unknown command "%s"', cmd)

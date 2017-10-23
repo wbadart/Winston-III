@@ -22,10 +22,10 @@ PROMPT = '>> '
 get_input = util.compose(input, str.lower)
 
 
-def main():
+def main(loglevel=loggin.DEBUG):
     '''Main execution/ event loop.'''
     log = logging.getLogger(__name__)
-    log.setLevel(logging.DEBUG)
+    log.setLevel(loglevel)
     MusicService = Music(library_root='./music_lib', verbose=True)
 
     usr_in = get_input(PROMPT)
