@@ -30,8 +30,7 @@ def main(loglevel=loggin.DEBUG):
 
     usr_in = get_input(PROMPT)
     while usr_in:
-        cmd, *rest = usr_in.split()
-        MusicService.dispatch(cmd, *rest)
+        MusicService.dispatch(usr_in)
 
         #=====================
         usr_in = get_input(PROMPT)

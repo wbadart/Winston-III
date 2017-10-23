@@ -40,9 +40,8 @@ def main(loglevel=logging.DEBUG):
             continue
 
         log.info('Heard "%s"', usr_in)
-        cmd, *rest = usr_in.lower().split()
 
-        music.dispatch(cmd, *rest)
+        music.dispatch(usr_in.lower())
 
 
         sleep(0.2)

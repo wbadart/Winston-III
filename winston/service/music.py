@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 '''
-' winston/music.py
+' winston/service/music.py
 '
 ' Description of the contract fulfilled by "Music" type services
 ' leveraged by Winston.
@@ -27,17 +27,17 @@ class Music(object):
     '''
     _PLAYER = mx.music
 
-    def __init__(self, library_root='.', verbose=False):
+    def __init__(self, library_root='.'):
         self._lib_root = library_root
         self._index_cache = None
         self._songs_cache = None
         self._albums_cache = None
         self._log = logging.getLogger(__name__)
-        self._log.setLevel(logging.DEBUG if verbose else logging.WARNING)
         mx.init()
 
-    def dispatch(self, cmd, *args):
+    def dispatch(self, cmd_str):
         '''Given a user input, execute the appropriate action.'''
+        cmd, *args = cmd_str.split()
         if cmd == _Command.play:
             self.play(' '.join(args))
         elif cmd == _Command.stop:
