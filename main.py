@@ -14,8 +14,6 @@ import logging
 from importlib import import_module
 from pdb import post_mortem
 
-logging.basicConfig(format='[%(levelname)s]: %(message)s')
-
 
 def main():
     from argparse import ArgumentParser
@@ -36,7 +34,8 @@ def main():
 
     args = parser.parse_args()
     loglevel = logging.DEBUG if args.verbose else logging.WARNING
-    log.setLevel(loglevel)
+    logging.basicConfig(
+        format='[%(levelname)s]: %(message)s', level=loglevel)
 
     log.debug('Using module "%s"', args.module)
     winston = import_module(f'winston.{args.module}')

@@ -13,7 +13,7 @@ import logging
 import speech_recognition as sr
 
 from time import sleep
-from winston.music import Music
+from winston.service.music import Music
 from winston.recognition import WinstonRecognizer
 
 
@@ -22,7 +22,7 @@ def main(loglevel=logging.DEBUG):
     log = logging.getLogger(__name__)
     log.setLevel(loglevel)
     recognizer = WinstonRecognizer()
-    music = Music(library_root='./music_lib', verbose=True)
+    music = Music(library_root='./music_lib')
 
     while True:
         log.info('Listening...')
@@ -35,13 +35,10 @@ def main(loglevel=logging.DEBUG):
         except sr.RequestError as e:
             log.error(
                 'Couln\'t reach backend {0}: {1}',
-                recognizer._backend,
-                e)
+                recognizer._backend, e)
             continue
 
         log.info('Heard "%s"', usr_in)
-
         music.dispatch(usr_in.lower())
-
 
         sleep(0.2)

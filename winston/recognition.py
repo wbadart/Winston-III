@@ -43,6 +43,7 @@ class WinstonRecognizer(object):
 
 class _Backend(object):
     google = 'google'
+    sphinx = 'sphinx'
 
 
 if __name__ == '__main__':

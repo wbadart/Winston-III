@@ -16,11 +16,11 @@ import pygame.mixer as mx
 
 from functools import partial, partialmethod
 from operator import itemgetter
+from .service_util import command, Service
+from .. import util
 
-import winston.util as util
 
-
-class Music(object):
+class Music(Service):
     '''
     Base implementation of music service
     providers. Plays music from disk.
@@ -28,31 +28,14 @@ class Music(object):
     _PLAYER = mx.music
 
     def __init__(self, library_root='.'):
+        super(Music, self).__init__()
         self._lib_root = library_root
         self._index_cache = None
         self._songs_cache = None
         self._albums_cache = None
-        self._log = logging.getLogger(__name__)
         mx.init()
 
-    def dispatch(self, cmd_str):
-        '''Given a user input, execute the appropriate action.'''
-        cmd, *args = cmd_str.split()
-        if cmd == _Command.play:
-            self.play(' '.join(args))
-        elif cmd == _Command.stop:
-            self.stop()
-        elif cmd == _Command.pause:
-            self.pause()
-        elif cmd == _Command.resume:
-            self.resume()
-        elif cmd == _Command.add:
-            self.add(' '.join(args))
-        elif cmd == _Command.help_:
-            print('COMMANDS: play, stop, pause, resume, add, help')
-        else:
-            self._log.error('Unknown command "%s"', cmd)
-
+    @command(verbs=['play'])
     def play(self, description):
         '''Begin playback of front of song queue.'''
         guess = self._guess(description)
@@ -73,18 +56,22 @@ class Music(object):
 
         self._PLAYER.play()
 
+    @command(verbs=['stop'])
     def stop(self):
         '''Stop current playback.'''
         self._PLAYER.stop()
 
+    @command(verbs=['pause'])
     def pause(self):
         '''Pauses playback of current track.'''
         self._PLAYER.pause()
 
+    @command(verbs=['resume', 'start'])
     def resume(self):
         '''Unpause paused playback.'''
         self._PLAYER.unpause()
 
+    @command(verbs=['add'])
     def add(self, song):
         '''Add a song to the play queue.'''
         path = os.path.join(self._lib_root, *self._guess(song))
@@ -164,13 +151,3 @@ class Music(object):
     _issong = partialmethod(_iswhat, 3)
     _isalbum = partialmethod(_iswhat, 2)
     _isartist = partialmethod(_iswhat, 1)
-
-
-class _Command(object):
-    '''Label the supported command strings.'''
-    play = 'play'
-    stop = 'stop'
-    pause = 'pause'
-    resume = 'resume'
-    add = 'add'
-    help_ = 'help'

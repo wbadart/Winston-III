@@ -9,7 +9,12 @@
 ' created: OCT 2017
 '''
 
-from functools import reduce
+from functools import reduce, wraps
+
+
+def compose(*funcs):
+    '''Feed the result of once function into another, left to right.'''
+    return lambda x: reduce(lambda acc, f: f(acc), funcs, x)
 
 
 def levenshtein(s, t):
@@ -17,8 +22,8 @@ def levenshtein(s, t):
     http://en.wikipedia.org/wiki/Levenshtein_distance
     Implementation by David Chiang
     """
-    m = len(s)
-    n = len(t)
+    s, t = s.lower(), t.lower()
+    m, n = len(s), len(t)
     # d[i][j] says how to get t[:j] from s[:i]
     d = [[None for j in range(n+1)] for i in range(m+1)]
     d[0][0] = 0
@@ -47,8 +52,3 @@ def levenshtein(s, t):
 
             d[i][j] = min(cands)
     return float(d[m][n])
-
-
-def compose(*funcs):
-    '''Feed the result of once function into another, left to right.'''
-    return lambda x: reduce(lambda acc, f: f(acc), funcs, x)
