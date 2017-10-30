@@ -11,8 +11,8 @@
 
 import logging
 
-from importlib import import_module
 from pdb import post_mortem
+from winston.server import Server
 
 
 def main():
@@ -21,27 +21,18 @@ def main():
     log = logging.getLogger(__name__)
 
     parser.add_argument(
-        '-m', '--module',
-        choices=['baseline', 'main'],
-        default='main',
-        help='target implementation (default:main)')
-
-    parser.add_argument(
         '-v', '--verbose',
         default=True,
         action='store_true',
         help='enable debugging messages (default:True)')
 
     args = parser.parse_args()
-    loglevel = logging.DEBUG if args.verbose else logging.WARNING
+    loglevel = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(
         format='[%(levelname)s]: %(message)s', level=loglevel)
 
-    log.debug('Using module "%s"', args.module)
-    winston = import_module(f'winston.{args.module}')
-
     try:
-        winston.main(loglevel)
+        Server().run()
     except EOFError:
         print('\nGoodbye!')
     except KeyboardInterrupt:
