@@ -17,6 +17,12 @@ def compose(*funcs):
     return lambda x: reduce(lambda acc, f: f(acc), funcs, x)
 
 
+def tosentence(string):
+    return (
+        string[0].upper() + string[1:] + ('.' if not string.endswith('.') else '')
+        if string else string)
+
+
 def levenshtein(s, t):
     """
     http://en.wikipedia.org/wiki/Levenshtein_distance

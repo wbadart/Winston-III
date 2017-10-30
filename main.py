@@ -29,14 +29,12 @@ def main():
     args = parser.parse_args()
     loglevel = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(
-        format='[%(levelname)s]: %(message)s', level=loglevel)
+        format='[%(module)s][%(levelname)s]: %(message)s', level=loglevel)
 
     try:
         Server().run()
-    except EOFError:
+    except (EOFError, KeyboardInterrupt):
         print('\nGoodbye!')
-    except KeyboardInterrupt:
-        return
     except Exception:
         post_mortem()
 

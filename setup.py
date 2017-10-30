@@ -21,9 +21,10 @@ setup(name='winston',
       license='MIT',
       packages=['winston'],
       install_requires=[
+          'nltk',
           'pygame',
-          'SpeechRecognition',
           'pyaudio',
           # 'pyyaml',
+          'SpeechRecognition',
       ],
       zip_safe=False)
