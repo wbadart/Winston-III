@@ -15,7 +15,9 @@ import logging
 from contextlib import closing
 from socket import socket
 from threading import Thread
-from .server_utils.dispatch import Dispatcher
+
+from .config import ServerConfig
+from .dispatch import Dispatcher
 
 
 class Server(object):
@@ -24,11 +26,17 @@ class Server(object):
     _SOCKET_BACKLOG = 2
     _CMD_SENTINEL = 'done'
 
-    def __init__(self, host='localhost', port=4000):
+    def __init__(self, **kwargs):
         self._log = logging.getLogger(__name__)
-        self._addr = self._host, self._port = host, port
+        try:
+            self._config = ServerConfig(**kwargs)
+        except TypeError as e:
+            self._log.warn('Invalid server config. Using defaults.')
+            self._config = ServerConfig()
+
+        self._host, self._port = self._config.host, self._config.port
         self._listen_socket = socket()  # default: SOCK_STREAM
-        self._listen_socket.bind((host, port))
+        self._listen_socket.bind((self._host, self._port))
 
     def run(self):
         '''Begin listening for incoming connections.'''

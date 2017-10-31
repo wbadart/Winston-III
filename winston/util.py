@@ -18,9 +18,27 @@ def compose(*funcs):
 
 
 def tosentence(string):
+    '''Capitalize starting character and append period. Helps POS tagging.'''
     return (
         string[0].upper() + string[1:] + ('.' if not string.endswith('.') else '')
-        if string else string)
+        if len(string) > 1 else string)
+
+
+
+class FileStreamMixin(object):
+    '''Provides methods for automatically flushing streams after sending messages.'''
+
+    def __init__(self, fs):
+        self._fs = fs
+
+    def send(self, msg):
+        self._fs.write(msg)
+        self._fs.flush()
+
+    def recv(self):
+        msg = self._fs.readline().strip()
+        self._fs.flush()
+        return msg
 
 
 def levenshtein(s, t):
