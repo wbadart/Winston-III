@@ -28,7 +28,8 @@ class MicrophoneClient(Client):
 
     def putoutput(self, msg):
         '''Report output back to user. TODO: tts'''
-        print(msg)
+        # print(msg)
+        os.system('espeak "%s" &' & msg)
 
 
 if __name__ == '__main__':
