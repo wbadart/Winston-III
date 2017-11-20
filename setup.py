@@ -15,16 +15,18 @@ from setuptools import setup
 setup(name='winston',
       version='0.0.1-alpha',
       description='Simple virtual assistant',
-      url='https://github.com/wbadart/Winston-III',
+      url='https://github.com/wbadart/Winston-III-Server',
       author='Will Badart',
-      author_email='wbadart@nd.edu',
+      author_email='wbadart@live.com',
       license='MIT',
       packages=['winston'],
       install_requires=[
           'nltk',
           'pygame',
           'pyaudio',
-          # 'pyyaml',
+          # 'pysttx,'
+          'pyyaml',
+          'requests',
           'SpeechRecognition',
       ],
       zip_safe=False)

@@ -9,7 +9,8 @@
 ' created: OCT 2017
 '''
 
-from speech_recognition import Microphone, Recognizer
+import speech_recognition as sr
+from logging import getLogger
 
 
 class WinstonRecognizer(object):
@@ -19,26 +20,36 @@ class WinstonRecognizer(object):
     '''
 
     def __init__(self):
-        self._recognizer = Recognizer()
-        self._source = Microphone(device_index=0)
-        self._backend = _Backend.google
+        self._log = getLogger(__name__)
+        self._recognizer = sr.Recognizer()
+        self._source = sr.Microphone(device_index=3)
+        # self._backend = _Backend.google
+        self._backend = _Backend.sphinx
 
         with self._source as src:
             self._recognizer.adjust_for_ambient_noise(src)
 
     def listen(self):
+        '''Public method for both getting mic input and recognizing.'''
         return self._recognize(self._listen())
 
     def _listen(self):
         '''Get audio sample.'''
+        self._log.info('Listening...')
         with self._source as src:
             audio = self._recognizer.listen(src)
         return audio
 
     def _recognize(self, audio):
         '''Use specified backend to recognize audio sample.'''
-        return getattr(
-            self._recognizer, f'recognize_{self._backend}')(audio)
+        try:
+            return getattr(
+                self._recognizer, f'recognize_{self._backend}')(audio)
+        except sr.UnknownValueError:
+            self._log.error('Could not recognize audio')
+        except sr.RequestError:
+            self._log.error('Could not contact recognition engine')
+        return ''
 
 
 class _Backend(object):

@@ -11,7 +11,7 @@
 '''
 
 import logging
-import winston.util as util
+import util
 
 from functools import partial
 from pdb import post_mortem

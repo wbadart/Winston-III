@@ -15,20 +15,20 @@ import os
 import pygame.mixer as mx
 
 from functools import partial, partialmethod
+from pathlib import Path
 from operator import itemgetter
-from .service_util import command, Service
-from .. import util
+from service_util import command, levenshtein, ServiceBase
 
 
-class Music(Service):
+class Service(ServiceBase):
     '''
     Base implementation of music service
     providers. Plays music from disk.
     '''
     _PLAYER = mx.music
 
-    def __init__(self, library_root='.'):
-        super(Music, self).__init__()
+    def __init__(self, library_root=os.path.join(Path.home(), 'Music')):
+        super(Service, self).__init__()
         self._lib_root = library_root
         self._index_cache = None
         self._songs_cache = None
@@ -36,8 +36,9 @@ class Music(Service):
         mx.init()
 
     @command(verbs=['play'])
-    def play(self, description):
+    def play(self, arg):
         '''Begin playback of front of song queue.'''
+        description = ' '.join(arg)
         guess = self._guess(description)
         path = os.path.join(self._lib_root, *guess)
 
@@ -87,8 +88,10 @@ class Music(Service):
 
     def _guess(self, description):
         '''Try to find song in library.'''
-        score = partial(util.levenshtein, description)
+        score = partial(levenshtein, description)
         self._log.debug('Guesses for "%s":', description)
+        if not self._songs:
+            raise RuntimeError('Library is empty')
 
         best_song = min(
             map(lambda s: (score(s[2]), s), self._songs),

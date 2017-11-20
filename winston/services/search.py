@@ -10,17 +10,24 @@
 ' created: OCT 2017
 '''
 
-import logging
+from logging import getLogger
+from pprint import pformat
+from requests import get
+from service_util import command, ServiceBase
 
-from .service_util import command, Service
 
-
-class Search(Service):
+class Service(ServiceBase):
     '''Do a web search.'''
-    _API_URI = 'https://https://api.duckduckgo.com/?q={q}&format=json'
+    _API_URI = 'https://api.duckduckgo.com/?q={q}&format=json'
 
     def __init__(self):
-        pass
+        # super(Service, self).__init_()
+        self._log = getLogger(__name__)
 
     def __call__(self, query):
-        return get(self._API_URI.format(q=query)).json()['Abstract']
+        response = get(self._API_URI.format(q=query)).json()
+        self._log.debug(pformat(response))
+        if response['Abstract']:
+            return response['Abstract']
+        else:
+            return response['RelatedTopics'][0]['Text']

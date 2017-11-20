@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.6
 
 '''
 ' main.py
@@ -9,11 +9,13 @@
 ' created: OCT 2017
 '''
 
+import json
 import logging
 import os
+import yaml
 
 from pdb import post_mortem
-from winston.server import Server
+from _server import Server
 
 
 def main():
@@ -35,10 +37,12 @@ def main():
     loglevel = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(
         format='[%(module)s][%(levelname)s]: %(message)s', level=loglevel)
+    config = {}
 
-    config = (load_yaml(args.config)
-              if args.config and os.path.exists(args.config)
-              else {})
+    if args.config and os.path.exists(args.config):
+        config_type = (json if args.config.endswith('.json') else yaml)
+        with open(args.config) as config_fs:
+            config = getattr(config_type, 'load', lambda *_: {})(config_fs)
 
     try:
         Server(**config).run()
