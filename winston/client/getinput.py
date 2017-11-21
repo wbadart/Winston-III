@@ -27,6 +27,3 @@ def stdin(client, **kwargs):
 def microphone(client, **kwargs):
     '''Collect and recognize mic input.'''
     return _RECOGNIZER.listen()
-
-
-default = stdin

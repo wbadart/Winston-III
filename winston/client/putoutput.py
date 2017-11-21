@@ -23,6 +23,3 @@ def stdout(client, msg, **kwags):
 def speak(client, msg, **kwargs):
     '''Play the message via espeak TTS.'''
     os.system('espeak "%s" &' % msg)
-
-
-default = stdout
