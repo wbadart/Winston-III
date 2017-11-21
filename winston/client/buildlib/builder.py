@@ -12,7 +12,7 @@
 import getinput
 import putoutput
 
-from _client import Client
+from ..baseclient import Client
 from inspect import getmembers, isfunction
 
 inputgetters = dict(getmembers(getinput, isfunction))

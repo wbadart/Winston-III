@@ -10,7 +10,7 @@
 '''
 
 import logging
-from _client import Client
+from ..baseclient import Client
 
 
 class WinstonCLI(Client):

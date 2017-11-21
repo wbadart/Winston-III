@@ -10,8 +10,10 @@
 '''
 
 import logging
-from _client import Client
-from recognition import WinstonRecognizer
+import os
+
+from ..baseclient import Client
+from ..util.recognition import WinstonRecognizer
 
 
 class MicrophoneClient(Client):
@@ -28,7 +30,6 @@ class MicrophoneClient(Client):
 
     def putoutput(self, msg):
         '''Report output back to user. TODO: tts'''
-        # print(msg)
         os.system('espeak "%s" &' & msg)
 
 

@@ -49,6 +49,50 @@ services_root: str = 'winston.services'
 services: List[str] = ['music', 'reminders', 'search']
 ```
 
+## Client Usage
+
+The Winston system was designed to be very flexible in terms of
+client interaction; communication happens over a regular old socket
+so it doesn't much matter to the server who's on the other end.
+
+That being said, most of the bookkeeping and utility functions
+needed for robust and easy interaction with the server are
+provided by a base client class, `Client`, located in
+`winston.client.baseclient`. To create a new client, you need only
+inherit from `Client` and provide `getinput` and `putoutput`
+methods (failing to define these in the child class will result in
+a `TypeError` at runtime. See [`@abc.abstractmethod`][abstract] for
+details).
+
+Two examples of this practice are provided at
+`winston.client.exapmles`: `cli` and `speech`, the first of which
+provides an interactive shell for communicating with the server,
+and the second of which provides a speech interface (STT and TTS)
+to users. They can be invoked as follows:
+
+```
+$ python3 -m winston.client.examples.cli --help
+```
+
+Or:
+
+
+```
+$ python3 -m winston.client.examples.speech --help
+```
+
+End users can easily create their own custom clients using the
+Winston Client Builder (WIP). The Client Build is a command line
+tool which exposes a suite of input-getter and output-putter
+functions which can be mixed and matched to create a very unique
+client. For instance, you can create a client with keyboard input
+and speech output. **Future plans** include chaining input-getters
+and output-putters so that a single client might accept both
+keyboard and speech input and be able to report on multiple
+channels.
+
+
 [class site][https://www3.nd.edu/~dchiang/teaching/nlp/2017]
 [google speech][https://cloud.google.com/speech]
 [pocketsphinx][http://www.speech.cs.cmu.edu/pocketsphinx]
+[abstract][https://docs.python.org/3/library/abc.html?highlight=abstractmethod#abc.abstractmethod]

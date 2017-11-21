@@ -11,9 +11,10 @@
 ' created: NOV 2017
 '''
 
-from recognition import WinstonRecognizer
+# from winston.client.util.recognition import WinstonRecognizer
+from ..util import recognition
 
-_RECOGNIZER = WinstonRecognizer()
+_RECOGNIZER = recognition.WinstonRecognizer()
 
 
 def stdin(client, **kwargs):

@@ -23,8 +23,7 @@ class WinstonRecognizer(object):
         self._log = getLogger(__name__)
         self._recognizer = sr.Recognizer()
         self._source = sr.Microphone(device_index=3)
-        # self._backend = _Backend.google
-        self._backend = _Backend.sphinx
+        self._backend = _Backend.google
 
         with self._source as src:
             self._recognizer.adjust_for_ambient_noise(src)
