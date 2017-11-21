@@ -91,7 +91,6 @@ and output-putters so that a single client might accept both
 keyboard and speech input and be able to report on multiple
 channels.
 
-
 [class site][https://www3.nd.edu/~dchiang/teaching/nlp/2017]
 [google speech][https://cloud.google.com/speech]
 [pocketsphinx][http://www.speech.cs.cmu.edu/pocketsphinx]
