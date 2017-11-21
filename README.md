@@ -9,7 +9,7 @@ At the highest level, Winston is divided into a server and clients.
 The server sits on a single node, such as a raspberry pi, and
 dispatches commands for any number of connected clients.
 
-Winston clients connect to a server over a TCP socket and sends
+Winston clients connect to a server over a TCP socket and send
 commands over that socket. For instance, the CLI client reads
 sentences from `stdin` and sends them to the server. The speech
 client, on the other hand, listens on the client host's microphone
