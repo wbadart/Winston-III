@@ -9,7 +9,10 @@
 ' created: NOV 2017
 '''
 
+import json
 import logging
+import yaml
+
 from abc import ABC, abstractmethod
 from contextlib import closing
 from socket import socket, timeout
@@ -25,14 +28,17 @@ class Client(ABC):
     _SOCKET_TIMEOUT = 5
     _RECV_BUFSIZ = 4096
 
-    def __init__(self, server_host, server_port):
+    def __init__(self, **config):
         self._log = logging.getLogger(__name__)
-        self._log.setLevel(logging.DEBUG)
-        addr = self._host, self._port = server_host, server_port
+        self._log.setLevel(config.get('loglevel', logging.DEBUG))
+
         self._socket = socket()  # default: SOCK_STREAM
+        self._done = False
+        self._config = config
+
+        addr = config.get('host', 'localhost'), config.get('port', 4000)
         self._log.debug('Connecting to server (%s:%d)', *addr)
         self._socket.connect(addr)
-        self._done = False
 
     def run(self):
         '''Spawn client's main event loop.'''
@@ -79,6 +85,10 @@ class Client(ABC):
         parser = ArgumentParser()
 
         parser.add_argument(
+            '-c', '--config',
+            help='Path to YAML or JSON config file.')
+
+        parser.add_argument(
             '-H', '--host', default='localhost',
             help='Hostname of remote Winston server (default:localhost)')
 
@@ -96,8 +106,16 @@ class Client(ABC):
         loglevel = logging.DEBUG if args.verbose else logging.INFO
         logging.basicConfig(
             format='[%(module)s][%(levelname)s]: %(message)s', level=loglevel)
+        config = {'loglevel': loglevel}
 
-        client = cls(args.host, args.port)
+        if args.config and os.path.exists(args.config):
+            config_type = (json if args.config.endswith('.json') else yaml)
+            with open(args.config, 'r') as config_fs:
+                config.update(
+                    getattr(config_type, 'load', lambda *_: {})(config_fs))
+        config.update(host=args.host, port=args.port)
+
+        client = cls(**config)
         try:
             client.run()
         except KeyboardInterrupt:

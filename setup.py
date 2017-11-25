@@ -21,6 +21,7 @@ setup(name='winston',
       license='MIT',
       packages=['winston'],
       install_requires=[
+          'colored',
           'nltk',
           'pygame',
           'pyaudio',

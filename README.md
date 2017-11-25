@@ -81,6 +81,22 @@ Or:
 $ python3 -m winston.client.examples.speech --help
 ```
 
+You can specify a config file for your client and set whatever keys
+and values you want. All clients will make use of the `host` and
+`port` keys (which default to `'localhost'` and `4000`
+respectively). An example of a key not used by all clients is the
+`mic_index` key. This key can be used to specify the device index
+the speech example client should listen on. To see which indices
+would work for you, run:
+
+```
+$ python3 -m winston.client.util.recognition 2> /dev/null
+```
+
+I recommend redirecting stderr since the `speech_recognition`
+module has a good deal of debugging output I wasn't able to
+suppress from within python.
+
 End users can easily create their own custom clients using the
 Winston Client Builder (WIP). The Client Build is a command line
 tool which exposes a suite of input-getter and output-putter

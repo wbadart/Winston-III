@@ -20,16 +20,16 @@ class MicrophoneClient(Client):
     '''Use speech recogniztion to collect commands.'''
     _EVENT_LOOP_DEBOUNCE = 0.3
 
-    def __init__(self, server_host, server_port):
-        super().__init__(server_host, server_port)
-        self._recognizer = WinstonRecognizer()
+    def __init__(self, **config):
+        super().__init__(**config)
+        self._recognizer = WinstonRecognizer(config.get('mic_index', 3))
 
     def getinput(self):
         '''Get input from the microphone.'''
         return self._recognizer.listen()
 
     def putoutput(self, msg):
-        '''Report output back to user. TODO: tts'''
+        '''Speak output back to user.'''
         os.system('espeak "%s" &' & msg)
 
 
