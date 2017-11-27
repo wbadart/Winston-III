@@ -36,9 +36,14 @@ class Client(ABC):
         self._done = False
         self._config = config
 
-        addr = config.get('host', 'localhost'), config.get('port', 4000)
+        addr = self._host, self._port = \
+            config.get('host', 'localhost'), config.get('port', 4000)
         self._log.debug('Connecting to server (%s:%d)', *addr)
         self._socket.connect(addr)
+
+        data_port = self.recv()
+        self._data_socket = socket()
+        self._data_socket.connect((self._host, int(data_port)))
 
     def run(self):
         '''Spawn client's main event loop.'''
