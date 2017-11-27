@@ -18,11 +18,15 @@ class ServiceMeta(ABCMeta):
 
     def __new__(cls, clsname, bases, attrs):
         registry = {}
+        commands = set()
         for f in attrs.values():
+            if hasattr(f, 'keywords'):
+                commands.add(f)
             for keyword in getattr(f, 'keywords', []):
                 registry[keyword] = f
         attrs['registry'] = registry
         attrs['keywords'] = set(registry)
+        attrs['commands'] = commands
         return super(ServiceMeta, cls).__new__(
             cls, clsname, bases, attrs)
 
