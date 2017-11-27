@@ -33,8 +33,8 @@ class Client(ABC):
         self._log.setLevel(config.get('loglevel', logging.DEBUG))
 
         self._socket = socket()  # default: SOCK_STREAM
-        self._done = False
         self._config = config
+        self._done = False
 
         addr = config.get('host', 'localhost'), config.get('port', 4000)
         self._log.debug('Connecting to server (%s:%d)', *addr)
