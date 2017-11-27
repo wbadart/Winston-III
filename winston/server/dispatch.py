@@ -10,84 +10,50 @@
 ' created: OCT 2017
 '''
 
-import sys
-
-from functools import partialmethod
 from importlib import import_module
 from logging import getLogger
-from nltk import download, pos_tag, word_tokenize
 from operator import itemgetter
-
-from config import ServerConfig
-
-# from services.music import Music
-# from services.search import Search
 
 
 class Dispatcher(object):
     '''Main Dispatcher implementation.'''
     _RECV_BUFSIZ = 4096
+    _SCORE_THRESHOLD = 0.1
 
-    # Get NLTK data if not yet cached
-    download('averaged_perceptron_tagger')
-    download('punkt')
-
-    def __init__(self, client_socket, server_conf):
+    def __init__(self, client_socket, config):
         self._log = getLogger(__name__)
         self._socket = client_socket
-        sys.path.append(server_conf.services_path)
         self._services = {}
-        for service in server_conf.services:
+        for service in config.get('services', ['search']):
             try:
-                self._services[service] = import_module(service)
+                self._services[service] = \
+                    import_module('winston.services.' + service) \
+                    .Service(client_socket, config)
                 self._log.debug('Loaded service "%s"', service)
             except ImportError as e:
-                self._log.error('Couldn\'t import service "%s": %s', service, e)
+                self._log.error(
+                    'Couldn\'t import service "%s": %s', service, e)
 
-        self._search = self._services['search'].Service()
-        self._music = self._services['music'].Service()
-
-
-    def __call__(self, cmd):
+    def __call__(self, cmd_str):
         '''
         Tag the words in the command string to determine the
         appropriate service.
         '''
-        self._log.info('Dispatching command "%s".', cmd)
-        if not cmd:
+        self._log.info('Dispatching command "%s".', cmd_str)
+        if not self._services:
+            raise RuntimeError('This server has no services.')
+        if not cmd_str:
             return
-        tagged = self._tagtokens(cmd)
-        self._log.debug(tagged)
-        if self._isquestion(tagged[0][1]):
-            # self._send('Thank you for your question.')
-            self._send(self._search(cmd))
-        elif tagged[0][0].casefold() == 'play'.casefold():
-            self._music.dispatch(cmd)
-            self._send('Playing...')
-        else:
-            self._send('Your wish is my command.')
 
-    def _is(self, tag_start, tag):
-        '''See if a POS tag is descendant of a higher level POS.'''
-        return tag.upper().startswith(tag_start.upper())
+        scores = list((service, service.score(cmd_str))
+                  for service in self._services.values())
 
-    _isverb = partialmethod(_is, 'v')
-    _isquestion = partialmethod(_is, 'w')
+        from pprint import pformat
+        self._log.debug(pformat(scores))
 
-    @classmethod
-    def _tagtokens(cls, string):
-        '''Wrap the tokenization and tagging of a string.'''
-        return pos_tag(word_tokenize(cls.tosentence(string)))
+        if not any(score >= self._SCORE_THRESHOLD for _, score in scores) \
+                and 'search' in self._services:
+            return self._services['search'].dispatch(cmd_str)
 
-    @staticmethod
-    def tosentence(string):
-        '''Capitalize starting character and append period. Helps POS tagging.'''
-        return (
-            string[0].upper() + string[1:] + ('.' if not string.endswith('.') else '')
-            if len(string) > 1 else string)
-
-    def _send(self, msg):
-        '''Give a message to the client.'''
-        if msg:
-            self._log.debug('Sending message "%s"', msg)
-            self._socket.send(msg.encode())
+        return max(scores, key=itemgetter(1))[0] \
+            .dispatch(cmd_str)

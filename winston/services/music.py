@@ -17,7 +17,8 @@ import pygame.mixer as mx
 from functools import partial, partialmethod
 from pathlib import Path
 from operator import itemgetter
-from service_util import command, levenshtein, ServiceBase
+from .util.misc import command, levenshtein
+from .util.baseservice import ServiceBase
 
 
 class Service(ServiceBase):
@@ -27,15 +28,20 @@ class Service(ServiceBase):
     '''
     _PLAYER = mx.music
 
-    def __init__(self, library_root=os.path.join(Path.home(), 'Music')):
-        super(Service, self).__init__()
-        self._lib_root = library_root
+    def __init__(self, socket, config):
+        super(Service, self).__init__(socket, config)
+        self._lib_root = config.get(
+            'music_path',
+            library_root=os.path.join(Path.home(), 'Music'))
         self._index_cache = None
         self._songs_cache = None
         self._albums_cache = None
         mx.init()
 
-    @command(verbs=['play'])
+    def dispatch(self, cmd_str):
+        '''Determine appropriate service method and execute.'''
+
+    @command(keywords=['play'])
     def play(self, arg):
         '''Begin playback of front of song queue.'''
         description = ' '.join(arg)
@@ -57,22 +63,22 @@ class Service(ServiceBase):
 
         self._PLAYER.play()
 
-    @command(verbs=['stop'])
+    @command(keywords=['stop'])
     def stop(self):
         '''Stop current playback.'''
         self._PLAYER.stop()
 
-    @command(verbs=['pause'])
+    @command(keywords=['pause'])
     def pause(self):
         '''Pauses playback of current track.'''
         self._PLAYER.pause()
 
-    @command(verbs=['resume', 'start'])
+    @command(keywords=['resume', 'start'])
     def resume(self):
         '''Unpause paused playback.'''
         self._PLAYER.unpause()
 
-    @command(verbs=['add'])
+    @command(keywords=['add'])
     def add(self, song):
         '''Add a song to the play queue.'''
         path = os.path.join(self._lib_root, *self._guess(song))

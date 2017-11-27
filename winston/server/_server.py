@@ -16,8 +16,7 @@ from contextlib import closing
 from socket import socket, SO_REUSEADDR, SOL_SOCKET
 from threading import Thread
 
-from config import ServerConfig
-from dispatch import Dispatcher
+from .dispatch import Dispatcher
 
 
 class Server(object):
@@ -27,23 +26,19 @@ class Server(object):
     _RECV_BUFSIZ = 4096
     _SOCKET_BACKLOG = 2
 
-    def __init__(self, **kwargs):
+    def __init__(self, **config):
         self._log = logging.getLogger(__name__)
-        try:
-            self._config = ServerConfig(**kwargs)
-        except TypeError as e:
-            self._log.warn('Invalid server config. Using defaults.')
-            self._config = ServerConfig()
+        self._config = config
 
-        self._host, self._port = self._config.host, self._config.port
+        addr = config.get('host', '0.0.0.0'), config.get('port', 4000)
         self._listen_socket = socket()  # default: SOCK_STREAM
         self._listen_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, int(True))
-        self._listen_socket.bind((self._host, self._port))
+        self._listen_socket.bind(addr)
+        self._log.info('Server bound to %s:%d', *addr)
 
     def run(self):
         '''Begin listening for incoming connections.'''
         self._listen_socket.listen(self._SOCKET_BACKLOG)
-        self._log.info('Server listening on %s:%d', self._host, self._port)
         with closing(self._listen_socket):
             while True:
                 client_info = self._listen_socket.accept()  # -> (sock_obj, addr)

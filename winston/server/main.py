@@ -15,7 +15,7 @@ import os
 import yaml
 
 from pdb import post_mortem
-from _server import Server
+from ._server import Server
 
 
 def main():
