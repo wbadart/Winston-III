@@ -10,6 +10,7 @@
 '''
 
 from abc import ABCMeta, abstractmethod
+from nltk import word_tokenize
 
 
 class ServiceMeta(ABCMeta):
@@ -42,18 +43,19 @@ class ServiceBase(metaclass=ServiceMeta):
         Report how likely it is that a command string was meant
         for this service. Should return float in [0, 1].
         '''
-        cmd_tokens = map(str.lower, word_tokenize(cmd_string))
+        cmd_tokens = list(map(str.lower, word_tokenize(cmd_str)))
         return (
-            len(t for t in cmd_tokens if t in self.keywords)
-          / len(cmd_tokens))
+            sum(1 for t in cmd_tokens if t in self.keywords)
+          / len(list(cmd_tokens)))
 
     def send(self, msg):
         '''Relay control information back to the client.'''
         if msg:
             self._socket.send(msg.encode())
+        return msg
 
 
-def command(verbs):
+def command(keywords):
     '''
     Decorator for service subclass _cmd_X methods to specify which
     verbs can trigger the action.

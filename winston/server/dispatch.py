@@ -24,7 +24,7 @@ class Dispatcher(object):
         self._log = getLogger(__name__)
         self._socket = client_socket
         self._services = {}
-        for service in config.get('services', ['search']):
+        for service in config.get('services', ['search', 'lookup']):
             try:
                 self._services[service] = \
                     import_module('winston.services.' + service) \

@@ -32,9 +32,7 @@ class Service(ServiceBase):
         return float(tagged[0][1].startswith('W'))
 
     def dispatch(self, cmd_str):
-        result = self(cmd_str)
-        self.send(result)
-        return result
+        return self.send(self(cmd_str))
 
     def __call__(self, query):
         response = get(self._API_URI.format(q=query)).json()
