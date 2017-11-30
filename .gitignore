@@ -2,7 +2,7 @@
 music_lib/
 
 # Config files
-*.config.{json,yaml}
+*.config.yaml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
