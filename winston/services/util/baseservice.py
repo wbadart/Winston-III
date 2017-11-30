@@ -10,7 +10,9 @@
 '''
 
 from abc import ABCMeta, abstractmethod
+from itertools import islice
 from nltk import word_tokenize
+from string import punctuation
 
 
 class ServiceMeta(ABCMeta):
@@ -42,12 +44,11 @@ class ServiceBase(metaclass=ServiceMeta):
     def dispatch(self, cmd_str):
         '''Attempt to run the method that corresponds to cmd verb.'''
 
-    def score(self, cmd_str):
+    def score(self, cmd_tokens):
         '''
         Report how likely it is that a command string was meant
         for this service. Should return float in [0, 1].
         '''
-        cmd_tokens = list(map(str.lower, word_tokenize(cmd_str)))
         return (
             sum(1 for t in cmd_tokens if t in self.keywords)
           / len(list(cmd_tokens)))
@@ -57,6 +58,18 @@ class ServiceBase(metaclass=ServiceMeta):
         if msg:
             self._socket.send(msg.encode())
         return msg
+
+    @staticmethod
+    def detokenize(cmd_tokens):
+        '''Turn tokenized sentences back into a single string.'''
+        if not cmd_tokens:
+            return ''
+        result = cmd_tokens[0]
+        for token in islice(cmd_tokens, 1, None):
+            if token not in punctuation:
+                result += ' '
+            result += token
+        return result
 
 
 def command(keywords):

@@ -22,6 +22,7 @@ setup(name='winston',
       packages=['winston'],
       install_requires=[
           'colored',
+          'Flask',
           'nltk',
           'pygame',
           'pyaudio',

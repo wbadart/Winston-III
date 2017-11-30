@@ -30,7 +30,8 @@ class MicrophoneClient(Client):
 
     def putoutput(self, msg):
         '''Speak output back to user.'''
-        os.system('espeak "%s" &' & msg)
+        print(msg)
+        os.system('espeak "%s" &' % msg)
 
 
 if __name__ == '__main__':
