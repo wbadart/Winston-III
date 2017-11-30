@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Winston III</title>
+    <link
+        rel="stylesheet"
+        href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css"
+        integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb"
+        crossorigin="anonymous">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Crimson+Text|Open+Sans">
+    <script
+        src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous">
+    </script>
+    <style>
+        body { font-family: 'Open Sans', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Crimson Text', serif; }
+        .page-header { padding-top: 2em; }
+    </style>
+</head>
+<body class="container">
+
+    <header class="page-header">
+        <h1>Hello, I'm here!</h1>
+    </header>
+
+    <div id="app">
+        <h2>Messages</h2>
+        <p>{{ msg }}</p>
+    </div>
+
+    <footer>
+        <p>&copy; 2017 <a href="https://wbadart.info">Will Badart<a></p>
+    </footer>
+
+    <script src="https://unpkg.com/vue"></script>
+    <script>
+        var app = new Vue({
+            el: '#app',
+            data: {
+                msg: 'asdf',
+            },
+        });
+    </script>
+
+</body>
+</html>
+
