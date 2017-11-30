@@ -1,6 +1,9 @@
 # On-disk music library
 music_lib/
 
+# Config files
+*.config.{json,yaml}
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
