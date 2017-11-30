@@ -11,8 +11,8 @@
         crossorigin="anonymous">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Crimson+Text|Open+Sans">
     <script
-        src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
-        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        src="https://code.jquery.com/jquery-3.2.1.min.js"
+        integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
         crossorigin="anonymous">
     </script>
     <style>
@@ -29,7 +29,10 @@
 
     <div id="app">
         <h2>Messages</h2>
-        <p>{{ msg }}</p>
+        <p v-for="msg in messages">{{ msg }}</p>
+        <form action="#" v-on:submit.prevent="put">
+            <input type="text" name="usr_in" id="usr_in" v-model="usr_in">
+        </form>
     </div>
 
     <footer>
@@ -41,8 +44,24 @@
         var app = new Vue({
             el: '#app',
             data: {
-                msg: 'asdf',
+                messages: [],
+                usr_in: '',
             },
+            methods: {
+                put: function(e) {
+                    var msg = e.target[0].value;
+                    this.push_msg(msg);
+                    $.post('/', {usr_in: msg}).then(this.push_msg)
+                    this.usr_in = '';
+                },
+                push_msg: function(msg) {
+                    console.log('pushing', msg);
+                    this.messages.push(msg);
+                }
+            }
+        });
+        $(document).ready(function() {
+            $('input#usr_in').focus();
         });
     </script>
 
