@@ -11,19 +11,20 @@
 
 from chatterbot import ChatBot
 from chatterbot.trainers import ChatterBotCorpusTrainer
-from .util.baseservice import ServiceBase
+from .util.baseservice import command, ServiceBase
 
 
 class Service(ServiceBase):
     '''Wrapper to ChatBot.'''
     _BOT = ChatBot('winston')
+    _CHAT_SENTINEL = 'done'
     _TRAINED = False
 
     def __init__(self, socket, config):
         super().__init__(socket, config)
         if not self._TRAINED:
-            self._bot.set_trainer(ChatterBotCorpusTrainer)
-            self._bot.train('chatterbot.corpus.english')
+            self._BOT.set_trainer(ChatterBotCorpusTrainer)
+            self._BOT.train('chatterbot.corpus.english')
             self._TRAINED = True
 
     def score(self, cmd_tokens):
@@ -36,4 +37,10 @@ class Service(ServiceBase):
 
     def __call__(self, msg):
         '''Get the conversational response to a message.'''
-        return self._bot.get_response(msg)
+        return self._BOT.get_response(msg)
+
+    @command(keywords=['let\'s', 'chat'])
+    def chat(self, msg):
+        while msg.casefold() != self._CHAT_SENTINEL:
+            self.send(self(msg))
+            msg = self.recv()

@@ -10,12 +10,14 @@
 ' created: OCT 2017
 '''
 
+from functools import partial
 from importlib import import_module
 from logging import getLogger
 from nltk import download, word_tokenize
 from operator import itemgetter
 from pprint import pformat
 from string import punctuation
+from threading import Lock, Thread
 
 
 class Dispatcher(object):
@@ -29,17 +31,14 @@ class Dispatcher(object):
 
     def __init__(self, client_socket, config):
         self._log = getLogger(__name__)
+        self._config = config
         self._socket = client_socket
         self._services = {}
-        for service in config.get('services', ['search', 'lookup', 'chat']):
-            try:
-                self._services[service] = \
-                    import_module('winston.services.' + service) \
-                    .Service(client_socket, config)
-                self._log.debug('Loaded service "%s"', service)
-            except ImportError as e:
-                self._log.error(
-                    'Couldn\'t import service "%s": %s', service, e)
+        self._service_lock = Lock()
+        for name in config.get('services', ['search', 'lookup']):
+            Thread(
+                target=self._register_service,
+                args=(name,)).start()
 
     def __call__(self, cmd_str):
         '''
@@ -68,3 +67,12 @@ class Dispatcher(object):
 
         return max(scores, key=itemgetter(1))[0] \
             .dispatch(cmd_tokens)
+
+    def _register_service(self, name):
+        '''Add a service to the registry.'''
+        try:
+            with self._service_lock:
+                self._services[name] = import_module(
+                    'winston.services.' + name).Service(self._socket, self._config)
+        except ImportError as e:
+            self._log.error('Couldn\'t import service "%s": %s', name, e)
