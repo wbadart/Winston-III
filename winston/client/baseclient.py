@@ -122,3 +122,18 @@ class Client(ABC):
         except KeyboardInterrupt:
             client.putoutput('Goodbye!')
             client.exit()
+
+
+class NOPClient(Client):
+    '''
+    A dumb, deaf client. For when you just need a blank slate
+    for a client (basically just hijack its connection to server.
+    '''
+
+    def putoutput(self, msg):
+        '''Ignore the given message.'''
+        return msg
+
+    def getinput(self):
+        '''Give a blank string.'''
+        return ''

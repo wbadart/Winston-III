@@ -56,7 +56,7 @@ class ServiceBase(metaclass=ServiceMeta):
     def send(self, msg):
         '''Relay control information back to the client.'''
         if msg:
-            self._socket.send(msg.encode())
+            self._socket.send(str(msg).encode())
         return msg
 
     @staticmethod

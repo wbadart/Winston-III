@@ -10,52 +10,38 @@
 ' created: NOV 2017
 '''
 
-from flask import Flask, redirect, request, send_file, url_for
-from ...baseclient import Client
+from contextlib import closing
+from flask import Flask, g, render_template, request
+from ...baseclient import NOPClient
 
 
-class WinstonWeb(Client):
+class WinstonWeb(NOPClient):
     '''Provdes a web interface to Winston server.'''
-    # app = Flask(__name__)
+    _USR_MSG_FIELD = 'usr_in'
+    _app = Flask(__name__)
 
-    # @app.route('/', methods=['GET'])
-    def index(name='world'):
-        return send_file('templates/index.html')
-
-    # @app.route('/', methods=['POST'])
-    def putmsg(self):
-        msg = request.form['usr_in']
-        self.send(msg)
-        return self.recv()
-
-    def getinput(self):
-        return ''
-
-    def putoutput(self, msg):
-        print(msg)
-
-    # def run(self):
-    #     self.app.run()
-
-    @classmethod
-    def main(cls):
-
-
-
-
-# if __name__ == '__main__':
-        client = cls()
-
-        app = Flask(__name__)
-
-        @app.route('/', methods=['GET'])
+    def run(self):
+        '''Configure and run the Flask app.'''
+        @self._app.route('/', methods=['GET'])
         def index():
-            return send_file('templates/index.html')
+            return render_template(
+                'index.html', msg_field=self._USR_MSG_FIELD)
 
-        @app.route('/', methods=['POST'])
+        @self._app.route('/', methods=['POST'])
         def handle_usrin():
-            msg = request.form['usr_in']
-            client.send(msg)
-            return client.recv()
+            '''Exract user message from field, send to server.'''
+            msg = request.form[self._USR_MSG_FIELD]
+            self.send(msg)
+            return self.recv()
 
-        app.run()
+        with closing(self._socket), self._app.app_context():
+            g._escape = self._escape
+            self._app.run()
+
+    @staticmethod
+    def _escape(s):
+        '''
+        Put curly braces around a string
+        so they don't get eatean by Jinja.
+        '''
+        return '{{' + str(s) + '}}'

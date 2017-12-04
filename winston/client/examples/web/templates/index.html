@@ -18,22 +18,39 @@
     <style>
         body { font-family: 'Open Sans', sans-serif; }
         h1, h2, h3, h4, h5, h6 { font-family: 'Crimson Text', serif; }
-        .page-header { padding-top: 2em; }
+        header { font-size: 2em; padding-top: 2em; padding-bottom: 1em; }
+        footer { border-top: 1px solid #bbb; margin-top: 2em; padding-top: 1em; }
+        input { display: block; margin-top: 2em; width: 100%; }
+        .msg { margin: 0; padding: 0.7em; }
+        .user { text-align: right; }
+        .server { background-color: #eee; }
+        /* .messages { max-height: 300px; overflow-y: scroll; } */
     </style>
 </head>
 <body class="container">
 
-    <header class="page-header">
-        <h1>Hello, I'm here!</h1>
+    <header class="text-center">
+        <h1>Hello, I'm <strong>Winston</strong></h1>
     </header>
 
-    <div id="app">
-        <h2>Messages</h2>
-        <p v-for="msg in messages">{{ msg }}</p>
-        <form action="#" v-on:submit.prevent="put">
-            <input type="text" name="usr_in" id="usr_in" v-model="usr_in">
+    <main id="app">
+        <section class="messages">
+            <p
+                class="msg"
+                v-for="msg in messages"
+                v-bind:class="msg.user ? 'user' : 'server'">
+                {{ g._escape('msg.text') }}
+            </p>
+        </section>
+        <form action="#" v-on:submit.prevent="send_form">
+            <input
+                type="text"
+                name="{{msg_field}}"
+                class="form-control"
+                id="usr_in"
+                v-model="usr_in">
         </form>
-    </div>
+    </main>
 
     <footer>
         <p>&copy; 2017 <a href="https://wbadart.info">Will Badart<a></p>
@@ -43,25 +60,34 @@
     <script>
         var app = new Vue({
             el: '#app',
-            data: {
-                messages: [],
-                usr_in: '',
-            },
+            data: { messages: [], usr_in: '' },
             methods: {
-                put: function(e) {
+                put: function(msg, cb) {
+                    cb = cb || this.push_msg;
+                    $.post('/', { {{msg_field}}: msg }).then(cb.bind(this)) },
+
+                push_msg: function(msg, user) {
+                    // Hack to get server messages behaving
+                    if(user === 'success') user = false;
+                    this.messages.push({text: msg, user: user});
+                },
+
+                send_form: function(e) {
                     var msg = e.target[0].value;
-                    this.push_msg(msg);
-                    $.post('/', {usr_in: msg}).then(this.push_msg)
+                    this.push_msg(msg, true);
+                    this.put(msg)
                     this.usr_in = '';
                 },
-                push_msg: function(msg) {
-                    console.log('pushing', msg);
-                    this.messages.push(msg);
+
+                init: function() {
+                    this.put('introduce yourself');
+                    this.put('help');
                 }
             }
         });
         $(document).ready(function() {
             $('input#usr_in').focus();
+            app.init();
         });
     </script>
 
