@@ -24,6 +24,7 @@ class Dispatcher(object):
     '''Main Dispatcher implementation.'''
     _RECV_BUFSIZ = 4096
     _SCORE_THRESHOLD = 0.1
+    _SERVICE_PATH = 'winston.services'
 
     # Get NLTK data if not yet cached
     download('averaged_perceptron_tagger')
@@ -71,7 +72,8 @@ class Dispatcher(object):
     def _register_service(self, name):
         '''Add a service to the registry.'''
         try:
-            module = import_module('winston.services.' + name)
+            module = import_module(
+                '{path}.{name}'.format(path=self._SERVICE_PATH, name=name))
         except ImportError as e:
             return self._log.error(
                 'Couldn\'t import service "%s": %s', name, e)

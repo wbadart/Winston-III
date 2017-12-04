@@ -4,6 +4,9 @@ music_lib/
 # Config files
 *.config.yaml
 
+# Chatbot database
+*.sqlite3
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
