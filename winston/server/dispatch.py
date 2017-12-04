@@ -71,8 +71,10 @@ class Dispatcher(object):
     def _register_service(self, name):
         '''Add a service to the registry.'''
         try:
-            with self._service_lock:
-                self._services[name] = import_module(
-                    'winston.services.' + name).Service(self._socket, self._config)
+            module = import_module('winston.services.' + name)
         except ImportError as e:
-            self._log.error('Couldn\'t import service "%s": %s', name, e)
+            return self._log.error(
+                'Couldn\'t import service "%s": %s', name, e)
+        service = module.Service(self._socket, self._config)
+        with self._service_lock:
+            self._services[name] = service
