@@ -16,12 +16,15 @@ from .util.baseservice import ServiceBase
 
 class Service(ServiceBase):
     '''Wrapper to ChatBot.'''
+    _BOT = ChatBot('winston')
+    _TRAINED = False
 
     def __init__(self, socket, config):
         super().__init__(socket, config)
-        self._bot = ChatBot('winston')
-        self._bot.set_trainer(ChatterBotCorpusTrainer)
-        self._bot.train('chatterbot.corpus.english')
+        if not self._TRAINED:
+            self._bot.set_trainer(ChatterBotCorpusTrainer)
+            self._bot.train('chatterbot.corpus.english')
+            self._TRAINED = True
 
     def score(self, cmd_tokens):
         '''Try to identify if a command is conversational.'''
