@@ -21,10 +21,13 @@ setup(name='winston',
       license='MIT',
       packages=['winston'],
       install_requires=[
+          'bllipparser',
           'chatterbot',
           'colored',
           'Flask',
+          'gmusicapi',
           'nltk',
+          'numpy',
           'pygame',
           'pyaudio',
           # 'pysttx,'

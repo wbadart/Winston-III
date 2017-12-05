@@ -13,7 +13,7 @@
 from functools import partial
 from importlib import import_module
 from logging import getLogger
-from nltk import download, word_tokenize
+from nltk import download
 from operator import itemgetter
 from pprint import pformat
 from string import punctuation
@@ -28,7 +28,9 @@ class Dispatcher(object):
 
     # Get NLTK data if not yet cached
     download('averaged_perceptron_tagger')
+    download('maxent_ne_chunker')
     download('punkt')
+    download('words')
 
     def __init__(self, client_socket, config):
         self._log = getLogger(__name__)
@@ -52,19 +54,16 @@ class Dispatcher(object):
         if not cmd_str:
             return
 
-        cmd_tokens = word_tokenize(cmd_str)
-        while cmd_tokens[0].casefold() == 'winston' \
-                or cmd_tokens[0] in punctuation:
-            cmd_tokens.pop(0)
+        cmd = Command(cmd_str)
 
         scores = list(
-            (service, service.score(cmd_tokens))
+            (service, service.score(cmd))
             for service in self._services.values())
         self._log.debug(pformat(scores))
 
         if not any(score >= self._SCORE_THRESHOLD for _, score in scores) \
                 and 'search' in self._services:
-            return self._services['search'].dispatch(cmd_tokens)
+            return self._services['search'].dispatch(cmd)
 
         return max(scores, key=itemgetter(1))[0] \
             .dispatch(cmd_tokens)

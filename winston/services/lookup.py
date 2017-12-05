@@ -19,19 +19,17 @@ from .util.baseservice import command, ServiceBase
 class Service(ServiceBase):
     '''Implements command lookup table.'''
 
-    def dispatch(self, cmd_tokens):
+    def dispatch(self, cmd):
         '''Run command from lookup table.'''
         result = max(
             self.commands,
-            key=partial(self._match, cmd_tokens))(self, cmd_tokens)
+            key=partial(self._match, cmd))(self, cmd)
         return self.send(result)
 
-    def score(self, cmd_tokens):
+    def score(self, cmd):
         '''Check for any exact matches, else fallback to defulat impl.'''
-        for cmd in self.commands:
-            if cmd_tokens[0] in self.keywords:
-                return 2.5
-        return super().score(cmd_tokens)
+        return 2.5 if any(w in self.keywords for w in cmd) \
+                   else super().score(cmd)
 
     @staticmethod
     def _match(cmd_tokens, method):
@@ -40,30 +38,18 @@ class Service(ServiceBase):
         return len(
             keywords.intersection(set(cmd_tokens))) / len(cmd_tokens)
 
-    @staticmethod
-    def _detokenize(tokens):
-        '''Join a list of tokens back into sentences.'''
-        result = tokens[0]
-        for token in tokens[1:]:
-            if token not in punctuation:
-                result += ' '
-            result += token
-        return result
-
     @command(keywords=['help'])
-    def help(self, cmd_tokens):
+    def help(self, cmd):
         return 'Just ask me something!'
 
     @command(keywords=['introduce', 'yourself'])
-    def intro(self, cmd_tokens):
+    def intro(self, cmd):
         return 'Hi, I\'m Winston!'
 
     @command(keywords=['echo'])
-    def echo(self, cmd_tokens):
-        if cmd_tokens[0].casefold() == 'echo':
-            cmd_tokens.pop(0)
-        return self._detokenize(cmd_tokens)
+    def echo(self, cmd):
+        return str(cmd)
 
     @command(keywords=['thank', 'you', 'thanks'])
-    def manners(self, cmd_tokens):
+    def manners(self, cmd):
         return "You're welcome!"

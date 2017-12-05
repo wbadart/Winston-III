@@ -27,13 +27,13 @@ class Service(ServiceBase):
             self._BOT.train('chatterbot.corpus.english')
             self._TRAINED = True
 
-    def score(self, cmd_tokens):
+    def score(self, cmd):
         '''Try to identify if a command is conversational.'''
         return float('inf')
 
-    def dispatch(self, cmd_tokens):
+    def dispatch(self, cmd):
         cmd_str = self.detokenize(cmd_tokens)
-        return self.send(self(cmd_str))
+        return self.send(self(str(cmd)))
 
     def __call__(self, msg):
         '''Get the conversational response to a message.'''

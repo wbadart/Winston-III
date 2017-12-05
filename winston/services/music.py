@@ -10,15 +10,16 @@
 ' created: OCT 2017
 '''
 
-import logging
 import os
 import pygame.mixer as mx
 
 from functools import partial, partialmethod
-from pathlib import Path
+from gmusicapi import Mobileclient
+from logging import getLogger
 from operator import itemgetter
-from .util.misc import command, levenshtein
-from .util.baseservice import ServiceBase
+from pathlib import Path
+from .util.misc import levenshtein
+from .util.baseservice import command, ServiceBase
 
 
 class Service(ServiceBase):
@@ -27,25 +28,36 @@ class Service(ServiceBase):
     providers. Plays music from disk.
     '''
     _PLAYER = mx.music
+    _GMUSIC_CRED_PATH = '.gmusic.creds'
 
     def __init__(self, socket, config):
         super(Service, self).__init__(socket, config)
+        self._log = getLogger(__name__)
         self._lib_root = config.get(
             'music_path',
-            library_root=os.path.join(Path.home(), 'Music'))
+            os.path.join(Path.home(), 'Music'))
         self._index_cache = None
         self._songs_cache = None
         self._albums_cache = None
         mx.init()
 
-    def dispatch(self, cmd_str):
+        self._gmusic = Mobileclient()
+        with open(self._GMUSIC_CRED_PATH, 'r') as fs:
+            uname, passwd = map(str.split, fs.readlines())
+        self._gmusic.login(
+            uname, passwd, Mobileclient.FROM_MAC_ADDRESS)
+
+    def score(self, cmd):
+        '''Try to determine if cmd fits "play X by Y on Z" structure.'''
+        return -1.
+
+    def dispatch(self, cmd):
         '''Determine appropriate service method and execute.'''
 
     @command(keywords=['play'])
-    def play(self, arg):
+    def play(self, cmd):
         '''Begin playback of front of song queue.'''
-        description = ' '.join(arg)
-        guess = self._guess(description)
+        guess = self._guess(str(cmd))
         path = os.path.join(self._lib_root, *guess)
 
         if self._issong(guess):

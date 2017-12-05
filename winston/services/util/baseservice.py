@@ -11,7 +11,9 @@
 
 from abc import ABCMeta, abstractmethod
 from itertools import islice
-from nltk import word_tokenize
+from nltk import pos_tag, word_tokenize
+from nltk.parse.bllip import RerankingParser
+from nltk.tree import Tree
 from string import punctuation
 
 
@@ -35,29 +37,34 @@ class ServiceMeta(ABCMeta):
 
 class ServiceBase(metaclass=ServiceMeta):
     '''Generic base class for Winston services.'''
+    _RECV_BUFSIZ = 4096
 
     def __init__(self, socket, config):
         self._socket = socket
         self._config = config
 
     @abstractmethod
-    def dispatch(self, cmd_str):
+    def dispatch(self, cmd):
         '''Attempt to run the method that corresponds to cmd verb.'''
 
-    def score(self, cmd_tokens):
+    def score(self, cmd):
         '''
         Report how likely it is that a command string was meant
         for this service. Should return float in [0, 1].
         '''
         return (
-            sum(1 for t in cmd_tokens if t in self.keywords)
-          / len(list(cmd_tokens)))
+            sum(1 for t in cmd if t in self.keywords)
+          / len(cmd))
 
     def send(self, msg):
         '''Relay control information back to the client.'''
         if msg:
             self._socket.send(str(msg).encode())
         return msg
+
+    def recv(self):
+        '''Get input from the connected client.'''
+        return self._socket.recv(self._RECV_BUFSIZ).decode()
 
     @staticmethod
     def detokenize(cmd_tokens):
@@ -70,6 +77,30 @@ class ServiceBase(metaclass=ServiceMeta):
                 result += ' '
             result += token
         return result
+
+
+class Command(list):
+    '''Hold all representations of a command string.'''
+    _PARSER = RerankingParser.fetch_and_load('WSJ-PTB3')
+
+    def __init__(self, cmd_str):
+        self._str = cmd_str
+        self.tokens = word_tokenize(cmd_str)
+        self.tagged = pos_tag(self._tokens)
+        self.parse = self._PARSER.simple_parse(cmd_str)
+        self.tree = Tree.fromstring(self._parse)
+
+    def __str__(self):
+        return self._str
+
+    def __repr__(self):
+        return str(self)
+
+    def __iter__(self):
+        return iter(self._tokens)
+
+    def __len__(self):
+        return len(self._tokens)
 
 
 def command(keywords):

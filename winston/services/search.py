@@ -11,7 +11,7 @@
 '''
 
 from logging import getLogger
-from nltk import pos_tag, sent_tokenize
+from nltk import sent_tokenize
 from pprint import pformat
 from requests import get
 from .util.baseservice import ServiceBase
@@ -25,16 +25,12 @@ class Service(ServiceBase):
         super().__init__(socket, config)
         self._log = getLogger(__name__)
 
-    def score(self, cmd_tokens):
+    def score(self, cmd):
         '''Claim command if it is a quesiton.'''
-        tagged = pos_tag(cmd_tokens)
-        print(tagged)
-        self._log.debug(tagged)
-        return float(tagged[0][1].startswith('W'))
+        return float(cmd.tagged[0][1].startswith('W'))
 
-    def dispatch(self, cmd_tokens):
-        cmd_str = self.detokenize(cmd_tokens)
-        return self.send(self(cmd_str))
+    def dispatch(self, cmd):
+        return self.send(self(cmd))
 
     def __call__(self, query):
         response = get(self._API_URI.format(q=query)).json()
