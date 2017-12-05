@@ -19,6 +19,7 @@ from ..util.recognition import WinstonRecognizer
 class MicrophoneClient(Client):
     '''Use speech recogniztion to collect commands.'''
     _EVENT_LOOP_DEBOUNCE = 0.3
+    _TTS_CMD = 'espeak "{arg}" &'
 
     def __init__(self, **config):
         super().__init__(**config)
@@ -31,7 +32,7 @@ class MicrophoneClient(Client):
     def putoutput(self, msg):
         '''Speak output back to user.'''
         print(msg)
-        os.system('espeak "%s" &' % msg)
+        os.system(self._TTS_CMD.format(arg=msg))
 
 
 if __name__ == '__main__':
