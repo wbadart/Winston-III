@@ -9,32 +9,48 @@
         href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css"
         integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb"
         crossorigin="anonymous">
+    <link
+        rel="stylesheet"
+        href="https://opensource.keycdn.com/fontawesome/4.7.0/font-awesome.min.css"
+        integrity="sha384-dNpIIXE8U05kAbPhy3G1cz+yZmTzA6CY8Vg/u2L9xRnHjJiAK76m2BIEaSEV+/aU"
+        crossorigin="anonymous">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Crimson+Text|Open+Sans">
+
     <script
         src="https://code.jquery.com/jquery-3.2.1.min.js"
         integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
         crossorigin="anonymous">
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/5.5.3/Rx.min.js"></script>
+
     <style>
         body { font-family: 'Open Sans', sans-serif; }
         h1, h2, h3, h4, h5, h6 { font-family: 'Crimson Text', serif; }
-        header { font-size: 2em; padding-top: 2em; padding-bottom: 1em; }
+        header { padding-top: 2em; padding-bottom: 1em; }
+        header h1 { font-size: 2em; }
+        header p { font-size 1.75em; }
         footer { border-top: 1px solid #bbb; margin-top: 2em; padding-top: 1em; }
         input { display: block; margin-top: 2em; width: 100%; }
+        i.fa { margin-right: 0.25em; }
         .msg { margin: 0; padding: 0.7em; }
         .user { text-align: right; }
         .server { background-color: #eee; }
-        /* .messages { max-height: 300px; overflow-y: scroll; } */
+        .messages { overflow-y: scroll; }
     </style>
 </head>
 <body class="container">
 
     <header class="text-center">
         <h1>Hello, I'm <strong>Winston</strong></h1>
+        <p>
+            <a href="https://github.com/wbadart/Winston-III" target="_blank">
+                <i class="fa fa-github"></i>I'm on Github
+            </a>
+        </p>
     </header>
 
     <main id="app">
-        <section class="messages">
+        <section class="messages" id="messages">
             <p
                 class="msg"
                 v-for="msg in messages"
@@ -60,8 +76,9 @@
     <script>
         var app = new Vue({
             el: '#app',
-            data: { messages: [], usr_in: '' },
+            data: { messages: [], usr_in: '' , msg_index: -1},
             methods: {
+
                 put: function(msg, cb) {
                     cb = cb || this.push_msg;
                     $.post('/', { {{msg_field}}: msg }).then(cb.bind(this)) },
@@ -69,28 +86,35 @@
                 push_msg: function(msg, user) {
                     // Hack to get server messages behaving
                     if(user === 'success') user = false;
-                    this.messages.push({text: msg, user: user});
-                },
+                    this.messages.push({text: msg, user: user}) },
 
                 send_form: function(e) {
                     var msg = e.target[0].value;
                     this.push_msg(msg, true);
                     this.put(msg)
-                    this.usr_in = '';
-                },
+                    this.usr_in = '' },
 
                 init: function() {
+                    $('input#usr_in').focus();
+
+                    var $msg_box = $('#messages'),
+                        app_height = $(window).height()
+                        - $('header').height()
+                        - $('footer').height();
+                    $msg_box.height(app_height / 2);
+
+                    var config = { attributes: true, childList: true };
+                    new MutationObserver(function(mutations) {
+                        $msg_box.scrollTop($msg_box.height() * 2);
+                    }).observe($msg_box[0], config);
+
                     this.put('introduce yourself');
                     this.put('help');
-                }
+                },
             }
         });
-        $(document).ready(function() {
-            $('input#usr_in').focus();
-            app.init();
-        });
+        $(document).ready(app.init);
     </script>
 
 </body>
 </html>
-

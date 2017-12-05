@@ -30,8 +30,7 @@ class WinstonWeb(NOPClient):
         @self._app.route('/', methods=['POST'])
         def handle_usrin():
             '''Exract user message from field, send to server.'''
-            msg = request.form[self._USR_MSG_FIELD]
-            self.send(msg)
+            self.send(request.form[self._USR_MSG_FIELD])
             return self.recv()
 
         with closing(self._socket), self._app.app_context():
