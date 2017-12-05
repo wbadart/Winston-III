@@ -37,25 +37,32 @@ class Client(ABC):
         self._config = config
         self._done = False
 
-        addr = config.get('host', 'localhost'), config.get('port', 4000)
+    def __enter__(self):
+        '''Establish socket connections.'''
+        addr = self._config.get('host', 'localhost'), \
+               self._config.get('port', 4000)
         self._log.debug('Connecting to server (%s:%d)', *addr)
         self._socket.connect(addr)
+        return self
+
+    def __exit__(self):
+        '''Tear down the socket connection.'''
+        self._socket.close()
 
     def run(self):
         '''Spawn client's main event loop.'''
         self._log.info('Running main event loop...')
-        with closing(self._socket):
-            self._socket.settimeout(self._SOCKET_TIMEOUT)
-            while not self._done:
-                sleep(self._EVENT_LOOP_DEBOUNCE)
-                usrin = self.getinput()
-                if not usrin:
-                    continue
-                self.send(usrin)
-                try:
-                    self.putoutput(self.recv())
-                except timeout:
-                    self.putoutput('Timeout')
+        self._socket.settimeout(self._SOCKET_TIMEOUT)
+        while not self._done:
+            sleep(self._EVENT_LOOP_DEBOUNCE)
+            usrin = self.getinput()
+            if not usrin:
+                continue
+            self.send(usrin)
+            try:
+                self.putoutput(self.recv())
+            except timeout:
+                self.putoutput('Timeout')
 
     def exit(self):
         self._done = True
@@ -116,12 +123,12 @@ class Client(ABC):
                     getattr(config_type, 'load', lambda *_: {})(config_fs))
         config.update(host=args.host, port=args.port)
 
-        client = cls(**config)
-        try:
-            client.run()
-        except KeyboardInterrupt:
-            client.putoutput('Goodbye!')
-            client.exit()
+        with cls(**config) as client:
+            try:
+                client.run()
+            except KeyboardInterrupt:
+                client.putoutput('Goodbye!')
+                client.exit()
 
 
 class NOPClient(Client):
