@@ -7,6 +7,9 @@ music_lib/
 # Chatbot database
 *.sqlite3
 
+# Credentials
+*.creds
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
