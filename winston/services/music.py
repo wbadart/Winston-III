@@ -76,7 +76,7 @@ class Service(ServiceBase):
 
     def _guess(self, cmd):
         '''Use syntactic information to help ID the song.'''
-        song = [tuple(), tuple(), tuple()]
+        song = [tuple()] * 3
         state = 0
         for i, (word, tag) in enumerate(cmd.tagged):
             if word.casefold() == 'play':
@@ -87,7 +87,10 @@ class Service(ServiceBase):
                 elif word.casefold() == 'on':
                     state = 2
             else:
-                song[state] += (word,)
+                song[state] += (
+                    word.capitalize()
+                    if word not in {'in', 'the'} or not song[state]
+                    else word,)
         return Song(*map(' '.join, song))
 
     def _getpath(self, song):
@@ -119,7 +122,6 @@ class Service(ServiceBase):
             for artist in self.artists
             for album in os.listdir(self.libpath(artist))
                 if os.path.isdir(self.libpath(artist, album))}
-
 
     def load_songs(self):
         '''The set of all song names. (Mapped to album)'''
