@@ -41,12 +41,14 @@ class Server(object):
         self._listen_socket.listen(self._SOCKET_BACKLOG)
         with closing(self._listen_socket):
             while True:
-                client_info = self._listen_socket.accept()  # -> (sock_obj, addr)
-                Thread(target=self._handle_connection, args=client_info).start()
+                client_info = self._listen_socket.accept()
+                Thread(
+                    target=self._handle_connection, args=client_info).start()
 
     def _handle_connection(self, client_socket, client_addr):
         '''Dispatch the incoming command.'''
-        self._log.debug('Dispatched new connection (%s:%d) to thread.', *client_addr)
+        self._log.debug(
+            'Dispatched new connection (%s:%d) to thread.', *client_addr)
         dispatch = Dispatcher(client_socket, self._config)
         with closing(client_socket):
             cmd = 'anything truthy; immediately reassigned'
@@ -55,7 +57,8 @@ class Server(object):
                 try:
                     dispatch(cmd)
                 except RuntimeError as e:
-                    client_socket.send('Something went wrong: {}'.format(e).encode())
+                    client_socket.send(
+                        'Something went wrong: {}'.format(e).encode())
         self._log.debug('Handler terminated')
 
 

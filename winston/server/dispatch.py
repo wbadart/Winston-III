@@ -10,13 +10,11 @@
 ' created: OCT 2017
 '''
 
-from functools import partial
 from importlib import import_module
 from logging import getLogger
 from nltk import download
 from operator import itemgetter
 from pprint import pformat
-from string import punctuation
 from threading import Lock, Thread
 from .util import Command
 
