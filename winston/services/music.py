@@ -13,13 +13,16 @@
 import os
 import pygame.mixer as mx
 
-from functools import partial, partialmethod
+from collections import namedtuple
+from functools import lru_cache, partial, partialmethod
 from gmusicapi import Mobileclient
 from logging import getLogger
 from operator import itemgetter
 from pathlib import Path
 from .util.misc import levenshtein
 from .util.baseservice import command, ServiceBase
+
+Song = namedtuple('Song', 'title artist album')
 
 
 class Service(ServiceBase):
@@ -36,49 +39,30 @@ class Service(ServiceBase):
         self._lib_root = config.get(
             'music_path',
             os.path.join(Path.home(), 'Music'))
-        self._index_cache = None
-        self._songs_cache = None
-        self._albums_cache = None
+        self.artists = self.load_artists()
+        self.albums = self.load_albums()
+        self.songs = self.load_songs()
         mx.init()
-
-        self._gmusic = Mobileclient()
-        with open(self._GMUSIC_CRED_PATH, 'r') as fs:
-            uname, passwd = map(str.split, fs.readlines())
-        self._gmusic.login(
-            uname, passwd, Mobileclient.FROM_MAC_ADDRESS)
 
     def score(self, cmd):
         '''Try to determine if cmd fits "play X by Y on Z" structure.'''
-        return -1.
+        return float(any(cmd.tokens[0] == kw for kw in self.keywords))
 
     def dispatch(self, cmd):
         '''Determine appropriate service method and execute.'''
+        return self.play(cmd)
 
     @command(keywords=['play'])
     def play(self, cmd):
         '''Begin playback of front of song queue.'''
-        guess = self._guess(str(cmd))
-        path = os.path.join(self._lib_root, *guess)
-
-        if self._issong(guess):
-            # If song, just play song
-            self._PLAYER.load(path)
-
-        elif self._isalbum(guess):
-            # If album, queue up all songs on album and play
-            self._add_album(guess)
-
-        else:
-            # TODO: If artist, queue all songs from all artists
-            for album in self._index[guess[0]]:
-                self._add_album((guess[0], album))
-
-        self._PLAYER.play()
-
-    @command(keywords=['stop'])
-    def stop(self):
-        '''Stop current playback.'''
-        self._PLAYER.stop()
+        guess = self._guess(cmd)
+        self._log.debug('Guess: %s', guess)
+        if not self._hassong(guess):
+            return self.send('I couldn\'t find that song.')
+        path = self._getpath(guess)
+        # self._PLAYER.load(path)
+        # self._PLAYER.play()
+        return self.send('Playing %s by %s on %s.' % guess)
 
     @command(keywords=['pause'])
     def pause(self):
@@ -90,85 +74,65 @@ class Service(ServiceBase):
         '''Unpause paused playback.'''
         self._PLAYER.unpause()
 
-    @command(keywords=['add'])
-    def add(self, song):
-        '''Add a song to the play queue.'''
-        path = os.path.join(self._lib_root, *self._guess(song))
-        self._PLAYER.queue(path)
+    def _guess(self, cmd):
+        '''Use syntactic information to help ID the song.'''
+        song = [tuple(), tuple(), tuple()]
+        state = 0
+        for i, (word, tag) in enumerate(cmd.tagged):
+            if word.casefold() == 'play':
+                continue
+            elif tag == 'IN':
+                if word.casefold() == 'by':
+                    state = 1
+                elif word.casefold() == 'on':
+                    state = 2
+            else:
+                song[state] += (word,)
+        return Song(*map(' '.join, song))
 
-    def _add_album(self, album):
-        '''Queue all songs on specified album. Load first song.'''
-        path = os.path.join(self._lib_root, *album)
-        first, *songs = os.listdir(path)
-        self._PLAYER.load(os.path.join(path, first))
-        for song in os.listdir(path):
-            self._PLAYER.queue(os.path.join(path, song))
-
-    def _guess(self, description):
-        '''Try to find song in library.'''
-        score = partial(levenshtein, description)
-        self._log.debug('Guesses for "%s":', description)
-        if not self._songs:
-            raise RuntimeError('Library is empty')
-
-        best_song = min(
-            map(lambda s: (score(s[2]), s), self._songs),
-            key=itemgetter(0))
-        self._log.debug('\tsong:   %s', best_song[1][2])
-
-        best_album = min(
-            map(lambda a: (score(a[1]), a), self._albums),
-            key=itemgetter(0))
-        self._log.debug('\talbum:  %s', best_album[1][1])
-
-        best_artist = min(
-            map(lambda a: (score(a[0]), (a,)), self._index),
-            key=itemgetter(0))
-        self._log.debug('\tartist: %s', best_artist[1][0])
-
-        guess = min(
-            [best_song, best_album, best_artist], key=itemgetter(0))[1]
-        self._log.debug('Guessing "%s" means "%s"', description, guess)
-        return guess
-
-
-    @property
-    def _index(self):
+    def _getpath(self, song):
         '''
         Load index of music library into memory. Music library must
         be of the following layout: root/artist/album/song. Gives
         map from artists->albums->songs.
         '''
-        if self._index_cache is None:
-            self._index_cache= {
-                artist: {
-                    album: os.listdir(os.path.join(self._lib_root, artist, album))
-                    for album in os.listdir(os.path.join(self._lib_root, artist))}
-                for artist in os.listdir(self._lib_root)}
-        return self._index_cache
+        # TODO: handle cases when only given title is album
+        # or artist name, not just song
+        album = self.songs[song.title]
+        artist = self.albums[album]
+        return self.libpath(artist, album, song.title)
 
-    @property
-    def _songs(self):
-        if self._songs_cache is None:
-            self._songs_cache = set(
-                (artist, album, song)
-                for artist, albums in self._index.items()
-                for album, songs in albums.items()
-                for song in songs)
-        return self._songs_cache
+    def _hassong(self, song):
+        '''Check if a song is present in the library.'''
+        return song.title in self.songs or os.path.isfile(self.libpath(*song))
 
-    @property
-    def _albums(self):
-        if self._albums_cache is None:
-            self._albums_cache = set(
-                (artist, album)
-                for artist, albums in self._index.items()
-                for album in albums)
-        return self._albums_cache
+    def load_artists(self):
+        '''Read the list of album names from lib root dir listing.'''
+        return set(
+            artist for artist in os.listdir(self._lib_root)
+            if os.path.isdir(self.libpath(artist)))
 
-    def _iswhat(self, tuple_len, description):
-        return type(description) is tuple and tuple_len == len(description)
+    def load_albums(self):
+        '''The set of all album names. (Mapped to artists)'''
+        return {
+            album: artist
+            for artist in self.artists
+            for album in os.listdir(self.libpath(artist))
+                if os.path.isdir(self.libpath(artist, album))}
 
-    _issong = partialmethod(_iswhat, 3)
-    _isalbum = partialmethod(_iswhat, 2)
-    _isartist = partialmethod(_iswhat, 1)
+
+    def load_songs(self):
+        '''The set of all song names. (Mapped to album)'''
+        songs = {}
+        for album, artist in self.albums.items():
+            if not os.path.isdir(self.libpath(artist, album)):
+                continue
+            for song in os.listdir(self.libpath(artist, album)):
+                if not os.path.isfile(self.libpath(artist, album, song)):
+                    continue
+                songs[song[len('01. '):-len('.mp3')]] = album
+        return songs
+
+    def libpath(self, *path):
+        '''Return the path starting at the library root.'''
+        return os.path.join(self._lib_root, *path)

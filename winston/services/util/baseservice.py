@@ -12,8 +12,6 @@
 from abc import ABCMeta, abstractmethod
 from itertools import islice
 from nltk import pos_tag, word_tokenize
-from nltk.parse.bllip import RerankingParser
-from nltk.tree import Tree
 from string import punctuation
 
 
@@ -77,30 +75,6 @@ class ServiceBase(metaclass=ServiceMeta):
                 result += ' '
             result += token
         return result
-
-
-class Command(list):
-    '''Hold all representations of a command string.'''
-    _PARSER = RerankingParser.fetch_and_load('WSJ-PTB3')
-
-    def __init__(self, cmd_str):
-        self._str = cmd_str
-        self.tokens = word_tokenize(cmd_str)
-        self.tagged = pos_tag(self._tokens)
-        self.parse = self._PARSER.simple_parse(cmd_str)
-        self.tree = Tree.fromstring(self._parse)
-
-    def __str__(self):
-        return self._str
-
-    def __repr__(self):
-        return str(self)
-
-    def __iter__(self):
-        return iter(self._tokens)
-
-    def __len__(self):
-        return len(self._tokens)
 
 
 def command(keywords):

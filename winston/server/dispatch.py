@@ -18,6 +18,7 @@ from operator import itemgetter
 from pprint import pformat
 from string import punctuation
 from threading import Lock, Thread
+from .util import Command
 
 
 class Dispatcher(object):
@@ -65,8 +66,7 @@ class Dispatcher(object):
                 and 'search' in self._services:
             return self._services['search'].dispatch(cmd)
 
-        return max(scores, key=itemgetter(1))[0] \
-            .dispatch(cmd_tokens)
+        return max(scores, key=itemgetter(1))[0].dispatch(cmd)
 
     def _register_service(self, name):
         '''Add a service to the registry.'''

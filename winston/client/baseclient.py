@@ -45,7 +45,7 @@ class Client(ABC):
         self._socket.connect(addr)
         return self
 
-    def __exit__(self):
+    def __exit__(self, e_type, e, traceback):
         '''Tear down the socket connection.'''
         self._socket.close()
 
@@ -134,7 +134,7 @@ class Client(ABC):
 class NOPClient(Client):
     '''
     A dumb, deaf client. For when you just need a blank slate
-    for a client (basically just hijack its connection to server.
+    for a client (basically just hijack its connection to server).
     '''
 
     def putoutput(self, msg):
