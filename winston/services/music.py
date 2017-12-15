@@ -14,13 +14,11 @@ import os
 import pygame.mixer as mx
 
 from collections import namedtuple
-from functools import lru_cache, partial, partialmethod
-from gmusicapi import Mobileclient
+from functools import partial
 from logging import getLogger
-from operator import itemgetter
 from pathlib import Path
-from .util.misc import levenshtein
 from .util.baseservice import command, ServiceBase
+from .util.misc import levenshtein
 
 Song = namedtuple('Song', 'title artist album')
 
@@ -59,7 +57,7 @@ class Service(ServiceBase):
         self._log.debug('Guess: %s', guess)
         if not self._hassong(guess):
             return self.send('I couldn\'t find that song.')
-        path = self._getpath(guess)
+        # path = self._getpath(guess)
         # self._PLAYER.load(path)
         # self._PLAYER.play()
         return self.send('Playing %s by %s on %s.' % guess)
@@ -78,7 +76,7 @@ class Service(ServiceBase):
         '''Use syntactic information to help ID the song.'''
         song = [tuple()] * 3
         state = 0
-        for i, (word, tag) in enumerate(cmd.tagged):
+        for word, tag in cmd.tagged:
             if word.casefold() == 'play':
                 continue
             elif tag == 'IN':
@@ -88,10 +86,20 @@ class Service(ServiceBase):
                     state = 2
             else:
                 song[state] += (
-                    word.capitalize()
+                    word  # .capitalize()
                     if word not in {'in', 'the'} or not song[state]
                     else word,)
         return Song(*map(' '.join, song))
+
+    def _guess_old(self, cmd):
+        '''
+        Levenshtein method for command to song matching,
+        adapted to new method interface.
+        '''
+        song_strs = {
+            'play {} by {} on {}'.format(*s): s for s in self.gen_index()}
+        return song_strs[
+            max(song_strs, key=partial(levenshtein, cmd))]
 
     def _getpath(self, song):
         '''
@@ -121,7 +129,7 @@ class Service(ServiceBase):
             album: artist
             for artist in self.artists
             for album in os.listdir(self.libpath(artist))
-                if os.path.isdir(self.libpath(artist, album))}
+            if os.path.isdir(self.libpath(artist, album))}
 
     def load_songs(self):
         '''The set of all song names. (Mapped to album)'''
@@ -138,3 +146,9 @@ class Service(ServiceBase):
     def libpath(self, *path):
         '''Return the path starting at the library root.'''
         return os.path.join(self._lib_root, *path)
+
+    def gen_index(self):
+        '''Flat listing of all songs.'''
+        for song, album in self.songs.items():
+            artist = self.albums[album]
+            yield Song(song.lower(), artist.lower(), album.lower())

@@ -18,7 +18,7 @@ def levenshtein(s, t):
     http://en.wikipedia.org/wiki/Levenshtein_distance
     Implementation by David Chiang
     """
-    s, t = s.lower(), t.lower()
+    s, t = str(s).lower(), str(t).lower()
     m, n = len(s), len(t)
     # d[i][j] says how to get t[:j] from s[:i]
     d = [[None for j in range(n+1)] for i in range(m+1)]
